@@ -1,1 +1,18 @@
 # compliment-bot
+
+## Install
+```
+git clone https://github.com/GoGei/compliment-bot.git
+```
+
+### create virtual env
+```
+python3.8 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+```
+
+### setup local settings
+```
+cp config/telegram_settings_example.py config/telegram_settings.py
+```
