@@ -1,0 +1,4 @@
+- Add more compliments
+- Add more apologizes
+- Made class oriented handler of commands
+- Add random choice handler
