@@ -1,11 +1,17 @@
+import os
 import json
 import typing
 import random
 import telebot
-from configs import telegram_settings
 
-BOT_TOKEN = telegram_settings.BOT_TOKEN
-bot = telebot.TeleBot(BOT_TOKEN)
+try:
+    from configs import telegram_settings
+
+    token = telegram_settings.BOT_TOKEN
+except Exception:
+    token = os.getenv('BOT_TOKEN')
+
+bot = telebot.TeleBot(token)
 
 COMMANDS = [
     {
