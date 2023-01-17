@@ -1,8 +1,8 @@
 import os
-import json
-import typing
-import random
 import telebot
+
+from utils.choicers import Choicer
+from utils.filereaders import JsonChoicesReader
 
 try:
     from configs import telegram_settings
@@ -11,93 +11,61 @@ try:
 except Exception:
     token = os.getenv('BOT_TOKEN')
 
-bot = telebot.TeleBot(token)
-
-COMMANDS = [
-    {
-        'command': ('start', 'hello'),
-        'description': 'Начать общаться с ботом'
+COMMANDS = {
+    'handle_welcome': {
+        'description': 'Начать общаться с ботом',
+        'decorator_kwargs': {
+            'commands': ['start', 'hello'],
+        }
     },
-    {
-        'command': 'compliment',
+    'handle_compliment': {
         'description': 'Чтобы получить комплимент',
+        'decorator_kwargs': {
+            'commands': ['compliment'],
+        }
     },
-    {
-        'command': 'apologize',
-        'description': 'Чтобы получить извинения'
+    'handle_apologize': {
+        'description': 'Чтобы получить извинения',
+        'decorator_kwargs': {
+            'commands': ['apologize'],
+        }
     }
-]
+}
 
-ALREADY_SEEN_COMPLIMENTS = set()
-ALREADY_SEEN_APOLOGIZE = set()
-DEFAULT_COMPLIMENT = 'Ты уже получила все комплименты, которые я написал. Новых пока не будет, клацай старые'
-DEFAULT_APOLOGIZE = 'Какого хера ты вообще меня завляешь много раз извиняться? Этого было не достаточно?'
+bot = telebot.TeleBot(token, parse_mode=None)
+
+apologize_choicer = Choicer(
+    choices=JsonChoicesReader(filepath='files/apologize.json').read(),
+    default_msg='Какого хера ты вообще меня завляешь много раз извиняться? Этого было не достаточно?'
+)
+compliment_choicer = Choicer(
+    choices=JsonChoicesReader(filepath='files/compliment.json').read(),
+    default_msg='Ты уже получила все комплименты, которые я написал. Новых пока не будет, клацай старые'
+)
 
 
-@bot.message_handler(commands=['start', 'hello'])
-def send_welcome(message):
+@bot.message_handler(**COMMANDS['handle_welcome']['decorator_kwargs'])
+def handle_welcome(message):
     msg = "Привет. Это твой персональный бот с набором команд, которые он понимает:\n"
-    for command_dict in COMMANDS:
-        command = command_dict['command']
+    for command_dict in COMMANDS.values():
+        command = command_dict['decorator_kwargs']['commands']
         description = command_dict['description']
         command_line = '%s - %s\n'
-
-        if isinstance(command, str):
-            command = command
-        elif isinstance(command, typing.Iterable):
-            command = '/'.join(command)
-        else:
-            command = str(command)
-
+        command = '/'.join(command)
         command_line = command_line % (command, description)
         msg += command_line
+
     bot.reply_to(message, msg)
 
 
-@bot.message_handler(commands=['compliment'])
-def send_compliment(message):
-    filepath = 'files/compliment.json'
-    with open(filepath, mode="r", encoding="utf-8") as file:
-        compliments = json.load(file)
-
-    global ALREADY_SEEN_COMPLIMENTS
-    global DEFAULT_COMPLIMENT
-
-    while True:
-        if len(ALREADY_SEEN_COMPLIMENTS) == len(compliments):
-            compliment = DEFAULT_COMPLIMENT
-            ALREADY_SEEN_COMPLIMENTS = set()
-            break
-
-        compliment = random.choice(compliments)
-        if compliment not in ALREADY_SEEN_COMPLIMENTS:
-            ALREADY_SEEN_COMPLIMENTS.add(compliment)
-            break
-
-    bot.reply_to(message, compliment)
+@bot.message_handler(**COMMANDS['handle_apologize']['decorator_kwargs'])
+def handle_apologize(message):
+    bot.reply_to(message, apologize_choicer.get_choice())
 
 
-@bot.message_handler(commands=['apologize'])
-def send_compliment(message):
-    filepath = 'files/apologize.json'
-    with open(filepath, mode="r", encoding="utf-8") as file:
-        apologizes = json.load(file)
-
-    global ALREADY_SEEN_APOLOGIZE
-    global DEFAULT_APOLOGIZE
-
-    while True:
-        if len(ALREADY_SEEN_APOLOGIZE) == len(apologizes):
-            apologize = DEFAULT_APOLOGIZE
-            ALREADY_SEEN_APOLOGIZE = set()
-            break
-
-        apologize = random.choice(apologizes)
-        if apologize not in ALREADY_SEEN_APOLOGIZE:
-            ALREADY_SEEN_APOLOGIZE.add(apologize)
-            break
-
-    bot.reply_to(message, apologize)
+@bot.message_handler(**COMMANDS['handle_compliment']['decorator_kwargs'])
+def handle_compliment(message):
+    bot.reply_to(message, compliment_choicer.get_choice())
 
 
-bot.infinity_polling()
+bot.polling()
