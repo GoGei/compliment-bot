@@ -68,4 +68,4 @@ def handle_compliment(message):
     bot.reply_to(message, compliment_choicer.get_choice())
 
 
-bot.polling(skip_pending=True)
+bot.polling(none_stop=True)
