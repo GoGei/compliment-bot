@@ -14,5 +14,5 @@ pip install -r requirements.txt
 
 ### setup local settings
 ```
-cp configs/telegram_settings_example.py config/telegram_settings.py
+cp configs/telegram_settings_example.py configs/telegram_settings.py
 ```
