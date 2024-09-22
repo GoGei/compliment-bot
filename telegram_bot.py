@@ -7,6 +7,8 @@ from utils.utils import (
     reset_user_limits,
     MAX_APOLOGIES_PER_DAY, MAX_COMPLIMENTS_PER_DAY
 )
+from telegram_bot import menu
+from telegram_bot.commands import COMMANDS
 
 try:
     from configs import telegram_settings
@@ -14,27 +16,6 @@ try:
     token = telegram_settings.BOT_TOKEN
 except Exception:
     token = os.getenv('BOT_TOKEN')
-
-COMMANDS = {
-    'handle_welcome': {
-        'description': 'Начать общаться с ботом',
-        'decorator_kwargs': {
-            'commands': ['start', 'hello', 'help'],
-        }
-    },
-    'handle_compliment': {
-        'description': 'Чтобы получить комплимент',
-        'decorator_kwargs': {
-            'commands': ['compliment'],
-        }
-    },
-    'handle_apologize': {
-        'description': 'Чтобы получить извинения',
-        'decorator_kwargs': {
-            'commands': ['apologize'],
-        }
-    }
-}
 
 bot = telebot.TeleBot(token, parse_mode=None)
 bot.set_webhook()
@@ -68,7 +49,7 @@ def handle_welcome(message):
         command_line = command_line % (command, description)
         msg += command_line
     msg += f'\nВ день ты можешь получит не больше {MAX_COMPLIMENTS_PER_DAY} комплиментов и {MAX_APOLOGIES_PER_DAY} извинений.'
-    bot.reply_to(message, msg)
+    bot.reply_to(message, msg, reply_markup=menu.create_main_menu())
 
 
 @bot.message_handler(**COMMANDS['handle_apologize']['decorator_kwargs'])
@@ -94,4 +75,5 @@ def handle_compliment(message):
 
 
 reset_user_limits()
+menu.set_bot_commands(bot=bot)
 bot.infinity_polling(skip_pending=True)
