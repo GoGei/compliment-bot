@@ -73,14 +73,24 @@ def handle_welcome(message):
 
 @bot.message_handler(**COMMANDS['handle_apologize']['decorator_kwargs'])
 def handle_apologize(message):
-    user_id = message.from_user.id
-    bot.reply_to(message, apologize_choicer.get_limited_choice(user_id))
+    trusted_nicknames_presented = bool(telegram_settings.BOT_TRUSTED_NICKNAMES)
+    user_is_trusted = message.from_user.username in telegram_settings.BOT_TRUSTED_NICKNAMES
+    if (trusted_nicknames_presented and user_is_trusted) or (trusted_nicknames_presented is False):
+        user_id = message.from_user.id
+        bot.reply_to(message, apologize_choicer.get_limited_choice(user_id))
+    else:
+        bot.reply_to(message, 'Я не понял, а ты ещё кто?')
 
 
 @bot.message_handler(**COMMANDS['handle_compliment']['decorator_kwargs'])
 def handle_compliment(message):
-    user_id = message.from_user.id
-    bot.reply_to(message, compliment_choicer.get_limited_choice(user_id))
+    trusted_nicknames_presented = bool(telegram_settings.BOT_TRUSTED_NICKNAMES)
+    user_is_trusted = message.from_user.username in telegram_settings.BOT_TRUSTED_NICKNAMES
+    if (trusted_nicknames_presented and user_is_trusted) or (trusted_nicknames_presented is False):
+        user_id = message.from_user.id
+        bot.reply_to(message, compliment_choicer.get_limited_choice(user_id))
+    else:
+        bot.reply_to(message, 'Я не понял, а ты ещё кто?')
 
 
 reset_user_limits()
